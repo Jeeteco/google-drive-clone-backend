@@ -74,13 +74,21 @@ router.post("/upload", authMiddleware, upload.single("file"), async (req, res) =
   }
 });
 
-router.get('/getFiles',async(req,res)=>{
-  const  { data: files, error } = await supabase
-  .from('files')
-  .select('*')
+router.get('/getFiles', async (req, res) => {
+  // Fetch data from the 'files' table
+  const { data: files, error } = await supabase
+    .from('files')
+    .select('*');
+  console.log(files)
+  // 1. Handle potential errors
+  if (error) {
+    console.error('Error fetching files:', error);
+    return res.status(500).json({ error: 'Could not fetch files' });
+  }
 
-  console.log(data);
-})
+  // 2. Send the data back to the client on success
+  res.status(200).json(files);
+});
 
 
 /**
