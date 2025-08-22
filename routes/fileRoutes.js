@@ -129,10 +129,11 @@ router.put("/restore/:id", async (req, res) => {
 /**
  * Rename File
  */
-router.put("/rename/:id", async (req, res) => {
+router.put("/rename/:id",authMiddleware, async (req, res) => {
+  //  console.log("req.body:", req.body); 
   const { id } = req.params;
   const { newName } = req.body;
-  // console.log(newName);
+  console.log(newName);
 
   const { error } = await supabase
     .from("files")
