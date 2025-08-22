@@ -53,7 +53,7 @@ router.post("/upload", authMiddleware, upload.single("file"), async (req, res) =
           size: file.size,
           mime_type: file.mimetype,
           owner_id: owner_id, // This is now guaranteed to be the correct user ID
-          folder_id: req.body.folder_id || null,
+          folder_id: folder_id || null,
         }
 
       ]).select();
@@ -63,23 +63,20 @@ router.post("/upload", authMiddleware, upload.single("file"), async (req, res) =
       console.error('🔴 Database Error:', dbError);
       return res.status(500).json({ error: dbError.message });
     }
-
-
-
-
-
     res.json({ message: "File uploaded successfully", file_url: fileUrl, id: fileId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/getFiles', async (req, res) => {
+router.get('/getFiles/:owner_id' ,async (req, res) => {
+  const {owner_id}=req.params;
+  
   // Fetch data from the 'files' table
   const { data: files, error } = await supabase
     .from('files')
-    .select('*');
-  console.log(files)
+    .select('*').eq('is_deleted', false).eq("owner_id", owner_id);
+  // console.log(files)
   // 1. Handle potential errors
   if (error) {
     console.error('Error fetching files:', error);
@@ -90,6 +87,44 @@ router.get('/getFiles', async (req, res) => {
   res.status(200).json(files);
 });
 
+//trash file
+router.get('/trash/getFiles/:owner_id', async (req, res) => {
+   const {owner_id}=req.params;
+  const { data: files, error } = await supabase
+    .from('files')
+    .select('*').eq('is_deleted', true);
+  // console.log(files)
+  // 1. Handle potential errors
+  if (error) {
+    console.error('Error fetching files:', error);
+    return res.status(500).json({ error: 'Could not fetch files' });
+  }
+
+  // 2. Send the data back to the client on success
+  res.status(200).json(files);
+
+})
+
+// restore trased file
+router.put("/restore/:id", async (req, res) => {
+  const { id } = req.params;
+
+
+
+  const { error } = await supabase
+    .from("files")
+    .update({ is_deleted: false })
+    .eq("id", id).select();
+  // console.log(data);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({ message: "File renamed successfully" });
+});
+
+
+
+
 
 /**
  * Rename File
@@ -97,13 +132,13 @@ router.get('/getFiles', async (req, res) => {
 router.put("/rename/:id", async (req, res) => {
   const { id } = req.params;
   const { newName } = req.body;
-  console.log(newName);
+  // console.log(newName);
 
   const { error } = await supabase
     .from("files")
     .update({ name: newName })
     .eq("id", id).select();
-    // console.log(data);
+  // console.log(data);
 
   if (error) return res.status(500).json({ error: error.message });
 
@@ -127,7 +162,7 @@ router.delete("/delete/:id", authMiddleware, async (req, res) => {
   res.json({ message: "File moved to trash" });
 });
 
-router.delete('/permanent/files/:id', authMiddleware, async (req, res) => {
+router.delete('/permanent/delete/:id', authMiddleware, async (req, res) => {
   const { id } = req.params;
 
   const { data: file } = await supabase

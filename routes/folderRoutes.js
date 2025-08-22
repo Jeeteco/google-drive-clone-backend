@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/create", authMiddleware, async (req, res) => {
   const { name, parent_folder_id } = req.body;
-  const owner_id = req.user.id; // ✅ from JWT
+  const owner_id = req.user.id;
 
   const { data, error } = await supabase
     .from('folders')
@@ -20,9 +20,13 @@ router.post("/create", authMiddleware, async (req, res) => {
       created_at: new Date().toISOString(),
       is_deleted: false
     }]);
-    console.log(name,owner_id)
+  // console.log(name, owner_id,)
   if (error) return res.status(400).json({ error: error.message });
-  res.json({ data });
+
+
+
+  res.json(data);
+ console.log(data?.id)
 });
 
 
