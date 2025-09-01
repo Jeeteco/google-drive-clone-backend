@@ -11,8 +11,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/upload", authMiddleware, upload.single("file"), async (req, res) => {
   try {
-    const { folder_id } = req.body;
+    const { folder_id } = req.query;
     const file = req.file;
+    
+    console.log("hlw",folder_id);
 
     //  Get user ID from req.use
     const owner_id = req.user.id;

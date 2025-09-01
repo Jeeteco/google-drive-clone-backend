@@ -22,13 +22,34 @@ router.post("/create", authMiddleware, async (req, res) => {
     }]);
   // console.log(name, owner_id,)
   if (error) return res.status(400).json({ error: error.message });
+    const { data: folder, error:err } = await supabase
+    .from('files')
+    .select('id').eq('is_deleted', false).eq("owner_id", owner_id);
 
-
-
+   if(err){
+    return res.status(400).json({err:err.message});
+   }
   res.json(data);
- console.log(data?.id)
+ console.log(folder)
 });
 
+router.get('/getFolder/:owner_id' ,async (req, res) => {
+  const {owner_id}=req.params;
+  
+  // Fetch data from the 'files' table
+  const { data: files, error } = await supabase
+    .from('folders')
+    .select('*').eq('is_deleted', false).eq("owner_id", owner_id);
+  // console.log(files)
+  // 1. Handle potential errors
+  if (error) {
+    console.error('Error fetching files:', error);
+    return res.status(500).json({ error: 'Could not fetch files' });
+  }
+
+  // 2. Send the data back to the client on success
+  res.status(200).json(files);
+});
 
 /**
  * Rename Folder
